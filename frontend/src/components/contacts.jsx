@@ -1,77 +1,55 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import React from "react";
-import axios from "axios";
 
 const Contacts = () => {
-    const [contacts, setContacts] = useState([]);
+    const [contacts, setContacts] = useState([
+        { id: 1, name: "John Doe", email: "john@example.com" },
+        { id: 2, name: "Jane Smith", email: "jane@example.com" }
+    ]);
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [editingContact, setEditingContact] = useState(null);
 
-    useEffect(() => {
-        fetchContacts();
-    }, []);
-
-    const fetchContacts = async () => {
-        try {
-            const response = await axios.get("/api/contacts");
-            setContacts(response.data);
-        } catch (error) {
-            console.error("Error fetching contacts:", error);
-        }
-    };
-
-    const handleAddContact = async () => {
+    const handleAddContact = () => {
         if (!name || !email) return alert("Please fill in all fields");
 
-        try {
-            const response = await axios.post("/api/contacts", { name, email });
-            setContacts([...contacts, response.data]);
-            setName("");
-            setEmail("");
-        } catch (error) {
-            console.error("Error adding contact:", error);
-        }
+        const newContact = { id: contacts.length + 1, name, email };
+        setContacts([...contacts, newContact]);
+        setName("");
+        setEmail("");
     };
 
-    const handleEditContact = async () => {
+    const handleEditContact = () => {
         if (!editingContact) return;
 
-        try {
-            const response = await axios.put(`/api/contacts/${editingContact._id}`, { name, email });
-            setContacts(contacts.map(contact => contact._id === editingContact._id ? response.data : contact));
-            setEditingContact(null);
-            setName("");
-            setEmail("");
-        } catch (error) {
-            console.error("Error updating contact:", error);
-        }
+        const updatedContacts = contacts.map(contact => 
+            contact.id === editingContact.id ? { ...contact, name, email } : contact
+        );
+        setContacts(updatedContacts);
+        setEditingContact(null);
+        setName("");
+        setEmail("");
     };
 
-    const handleDeleteContact = async (id) => {
-        try {
-            await axios.delete(`/api/contacts/${id}`);
-            setContacts(contacts.filter(contact => contact._id !== id));
-        } catch (error) {
-            console.error("Error deleting contact:", error);
-        }
+    const handleDeleteContact = (id) => {
+        setContacts(contacts.filter(contact => contact.id !== id));
     };
 
     return (
-        <div>
+        <div style={styles.container}>
             <h2>Contacts</h2>
-            <div>
-                <input
-                    type="text"
-                    placeholder="Name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+            <div style={styles.inputContainer}>
+                <input 
+                    type="text" 
+                    placeholder="Name" 
+                    value={name} 
+                    onChange={(e) => setName(e.target.value)} 
                 />
-                <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                <input 
+                    type="email" 
+                    placeholder="Email" 
+                    value={email} 
+                    onChange={(e) => setEmail(e.target.value)} 
                 />
                 {editingContact ? (
                     <button onClick={handleEditContact}>Update Contact</button>
@@ -79,17 +57,24 @@ const Contacts = () => {
                     <button onClick={handleAddContact}>Add Contact</button>
                 )}
             </div>
-            <ul>
+            <ul style={styles.list}>
                 {contacts.map(contact => (
-                    <li key={contact._id}>
+                    <li key={contact.id} style={styles.card}>
                         <strong>{contact.name}</strong> - {contact.email}
                         <button onClick={() => setEditingContact(contact)}>Edit</button>
-                        <button onClick={() => handleDeleteContact(contact._id)}>Delete</button>
+                        <button onClick={() => handleDeleteContact(contact.id)}>Delete</button>
                     </li>
                 ))}
             </ul>
         </div>
     );
+};
+
+const styles = {
+    container: { textAlign: "center", padding: "20px" },
+    inputContainer: { marginBottom: "20px" },
+    list: { listStyleType: "none", padding: 0 },
+    card: { display: "flex", justifyContent: "space-between", padding: "10px", border: "1px solid #ddd", marginBottom: "5px", borderRadius: "5px" }
 };
 
 export default Contacts;
